@@ -1,5 +1,5 @@
-requirejs(["./Block.js"], function(Block) {
-  return [
+define(["./Block"], function(Block) {
+  var blocks = [
     new Block('I', [[[0,-1], [0,0], [0,1], [0,2]], [[-1,0], [0,0], [1,0], [2,0]]]),
     new Block('L', [[[0,0], [-1,0], [-1,1], [-1,2]], [[-2,0],[-2,1],[-1,1],[0,1]],
       [[0,0],[0,1],[0,2],[-1,2]], [[-2,0],[-1,0],[0,0],[0,1]]]),
@@ -9,4 +9,10 @@ requirejs(["./Block.js"], function(Block) {
     new Block('S', [[[1,0], [1,1], [0,1], [0,2]], [[-1,0], [0,0], [0,1], [1,1]]]),
     new Block('O', [[[0,0], [0,1], [1,1], [1,0]]])
   ];
+  
+  return {
+    getBlock: function() {
+      return blocks[1];
+    }    
+  };
 });
