@@ -16,12 +16,20 @@
 #board {
 	width: 75%;
 	margin: 0 auto;
+  white-space: nowrap;
+}
+
+#next-block {
+  float: right;
+  width: 25%;
+  white-space: nowrap;
 }
 
 div.row {
 	background-color: green;
 	width: 100%;
 	height: 20px;
+  white-space: nowrap;
 }
 
 div.cell {
@@ -30,7 +38,15 @@ div.cell {
 	height: 20px;
 	border: 1px solid black;
 	display: inline-block;
-    box-sizing: border-box;
+  box-sizing: border-box;
+  text-align: center;
+  vertical-align: middle;
+}
+
+div.invisible-cell {
+  width: 20px;
+  height: 20px;
+  display: inline-block;
 }
 
 div.block {
