@@ -1,0 +1,42 @@
+#app {
+	background-color: ivory;
+	width: 100%;
+}
+
+#logo {
+	background-color: black;
+	width: 100%;
+}
+
+#game-area {
+	width: 75%;
+	margin: 0 auto;
+}
+
+#board {
+	width: 75%;
+	margin: 0 auto;
+}
+
+div.row {
+	background-color: green;
+	width: 100%;
+	height: 20px;
+}
+
+div.cell {
+	background-color: red;
+	width: 20px;
+	height: 20px;
+	border: 1px solid black;
+	display: inline-block;
+    box-sizing: border-box;
+}
+
+div.block {
+	background-color: yellow;
+}
+
+div.final {
+	background-color: blue;
+}

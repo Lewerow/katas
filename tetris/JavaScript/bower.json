@@ -1,0 +1,21 @@
+{
+  "name": "Tetris-JS",
+  "homepage": "https://github.com/Lewerow/katas",
+  "authors": [
+    "Tomasz Lewowski <tomasz.lewowski@wp.eu>"
+  ],
+  "description": "Tetris in JavaScript as an exercise",
+  "main": "src/tetris.js",
+  "keywords": [
+    "Tetris"
+  ],
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
