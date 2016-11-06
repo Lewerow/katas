@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Tetris - versja JS + DOM</title>
+  <link href="src/tetris.css" rel="stylesheet" type="text/css"></link>
+  <meta charset="utf-8"></meta> 
+</head>
+<body>
+  <div id="app">
+    <div id="logo"></div>
+  	<div id="game-area">
+	    <div id="playground">
+        <div id="message-container">
+          <div id="message"></div>
+        </div>
+		    <div id="board"></div>
+        <div id="game-menu">
+          <div id="metadata">
+            <div id="next-block"></div>
+       	    <div id=""></div>
+            <div id="restart-container"><button id="restart">Start</button></div>
+            <div id="points-container">Punkty: <span id="points"></span></div>
+            <div id="line-container">Linie: <span id="lines"></span></div>
+            <div id="level-container">Poziom: <span id="level"></span></div>
+          </div>
+          <div id="help">
+            <h4>Sterowanie: </h4>
+            <ul id="help-items">
+              <li class="help-item">p &mdash; pauza</li>
+              <li class="help-item">&rarr; &mdash; przesunięcie bloku w prawo</li>
+              <li class="help-item">&larr; &mdash; przesunięcie bloku w lewo</li>
+              <li class="help-item">&uarr; &mdash; obrót bloku o 90&deg; w prawo</li>
+              <li class="help-item">&darr;  &mdash; przyspiesza spadanie bloku</li>
+            </ul>
+          </div>
+        </div>
+	    </div>
+	  </div>
+  </div>
+  <script src="tetris.js"></script>
+</body>
+</html>
