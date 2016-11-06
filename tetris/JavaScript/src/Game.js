@@ -1,11 +1,18 @@
-define(["./Board", "./BlockGenerator"], function(Board, BlockGenerator) {
+define(["./Cell", "./Board", "./BlockGenerator"], function(Cell, Board, BlockGenerator) {
+  const defaultFastRoundDelay = 25;
+  const defaultNormalRoundDelay = 400;
+  const levelCount = 10;
+  const linesPerLevel = 10;
   function Game(board, hintBox) {
     this._board = board;
     this._hintBox = hintBox;
-  }
-  
-  function getStartPoint(block, board) {
-    return [4,4];
+    this._clearedLines = 0;
+    this._level = 1;
+    this._points = 0;
+    this._normalRoundDelay = defaultNormalRoundDelay;
+  	document.getElementById("points").innerHTML = this._points;
+  	document.getElementById("level").innerHTML = this._level;
+  	document.getElementById("lines").innerHTML = this._clearedLines;
   }
   
   function pullDown(board, toMoveUp) {
@@ -15,30 +22,35 @@ define(["./Board", "./BlockGenerator"], function(Board, BlockGenerator) {
     }
   }
   
-  function emptify(row) {
-    row.forEach(c => c.reset());
+  Game.prototype.speedUp = function() {
+    this._normalRoundDelay -= (defaultNormalRoundDelay - defaultFastRoundDelay) / levelCount;
+    if(this._normalRoundDelay < defaultFastRoundDelay)
+      this._normalRoundDelay = defaultFastRoundDelay;
   }
   
-  function speedUp() {
-    normalRound -= fastRound;
-    if(normalRound < fastRound)
-      normalRound = fastRound;
+  Game.prototype.getFastRoundDelay = function() {
+    return defaultFastRoundDelay;
   }
   
-  function levelUp() {
-    level++;
-  	elemById("level").innerHTML = level;
-    speedUp();
+  Game.prototype.getNormalRoundDelay = function() {
+    return this._normalRoundDelay;
   }
   
-  function awardPoints(howManyLines) {
-    if(clearedLines % 10 + howManyLines > 10) {
-      levelUp();
+  Game.prototype.levelUp = function() {
+    this._level++;
+  	document.getElementById("level").innerHTML = this._level;
+    this.speedUp();
+  }
+  
+  Game.prototype.awardPoints = function(howManyLines) {
+    if(this._clearedLines % linesPerLevel + howManyLines >= linesPerLevel) {
+      this.levelUp();
     }
     
-    clearedLines += howManyLines;
-    points += Math.pow(howManyLines, 2);
-  	elemById("points").innerHTML = points;
+    this._clearedLines += howManyLines;
+  	document.getElementById("lines").innerHTML = this._clearedLines;
+    this._points += Math.pow(howManyLines, 2);
+  	document.getElementById("points").innerHTML = this._points;
   }
   
   Game.prototype.clearFullLines = function() {
@@ -46,11 +58,11 @@ define(["./Board", "./BlockGenerator"], function(Board, BlockGenerator) {
       return row.reduce((acc, c) => acc && c.currentValue === 'x', true);
     });
     
-    const clearedRowCount = fullRows.reduce((a,b) => a + b, 0);
-    awardPoints(clearedRowCount);
+    const clearedRowCount = fullRows.filter((a) => a).length;
+    this.awardPoints(clearedRowCount);
     fullRows.forEach((fullRow, k) => {
       if(fullRow) {
-        emptify(this._board[k]);
+        this._board[k].forEach(c => c.reset());
         pullDown(this._board, k);
       }
     });
@@ -78,8 +90,8 @@ define(["./Board", "./BlockGenerator"], function(Board, BlockGenerator) {
     }
     
     this._currentBlock.fasten(this._basePoint, this._board);
-    clearFullLines(board);
-    return false;
+    this.clearFullLines(this._board);
+    return this.addNextBlock()
   }
 
   Game.prototype.rotateBlock = function() {
@@ -90,27 +102,30 @@ define(["./Board", "./BlockGenerator"], function(Board, BlockGenerator) {
     return false;
   }
   
-  Game.prototype.nextBlock = function() {
-    this._currentBlock = this.nextBlock();
-    this._nextBlock.wrappedInRedraw(() => Object.assign(this._nextBlock, BlockGenerator.getBlock()));
-    this._basePoint = getStartPoint(this._currentBlock, this._board);
+  Game.prototype.addNextBlock = function() {
+    this._currentBlock = this._nextBlock;
+    this._basePoint = Board.getStartPoint(this._board, this._currentBlock);
     
-    this._currentBlock.draw(this._basePoint, this._board);
-    return Board.isValidBlock(this._board, this._currentBlock, this._basePoint);
+    this._nextBlock.erase([2,1], this._hintBox);
+    this._nextBlock = BlockGenerator.getBlock();
+    this._nextBlock.draw([2,1], this._hintBox);
+    
+    if(Board.isValidBlock(this._board, this._currentBlock, this._basePoint)) {
+      this._currentBlock.draw(this._basePoint, this._board);
+      return true;      
+    }
+    return false;
   }
   
   Game.prototype.start = function() {
-    return this.nextBlock();
-    this._currentBlock = BlockGenerator.getBlock();
     this._nextBlock = BlockGenerator.getBlock();
-    this._basePoint = getStartPoint(this._currentBlock, this._board);
-    
-    this._nextBlock.draw([2,1], this._hintBox);
-    this._currentBlock.draw(this._basePoint, this._board);    
+    this.addNextBlock();
   }
   
   Game.prototype.over = function() {
-    elemById("game-menu").innerHTML = "GAME OVER!";    
+    document.getElementById("message").innerHTML = "Game over!";
+    document.getElementById("restart").disabled = false;
+    document.getElementById("restart").innerHTML = "Restart";
   }
   
   return Game;

@@ -28,7 +28,7 @@ define(["./Cell"], function(Cell) {
 		}
 		
 		return cells;
-  }
+  };
     
   Board.isValidBlock = function(board, block, basePoint) {
     return block.points(basePoint).reduce((acc, b) => acc && 
@@ -36,7 +36,18 @@ define(["./Cell"], function(Cell) {
       isInClosedOpenInterval(0, b.y, board.length) &&
       board[b.y][b.x].currentValue !== 'x', 
     true);
-  }
+  };
+  
+  
+  Board.getStartPoint = function(board, block) {
+    var min = block.points([0,0]).reduce((acc, p) => {
+      var x = p.x > acc.x ? acc.x : p.x;
+      var y = p.y > acc.y ? acc.y : p.y;
+      return { x: x, y: y };
+    });
+    
+    return [-min.y, Math.floor(board[0].length / 2) - 1]; // -1 to compensate right-bias
+  };
   
   return Board;
 });

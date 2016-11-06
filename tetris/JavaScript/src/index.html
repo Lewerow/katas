@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Tetris in JavaScript</title>
+  <title>Tetris - versja JS + DOM</title>
   <script data-main="tetris.js" src="../bower_components/requirejs/require.js"></script>
   <link href="tetris.css" rel="stylesheet" type="text/css"></link>
 </head>
@@ -9,21 +9,30 @@
   <div id="app">
     <div id="logo"></div>
   	<div id="game-area">
-	    <div id="game-menu"></div>
 	    <div id="playground">
-	      <div id="next-block"></div>
-		    <div id="points"></div>
-		    <div id="level"></div>
+        <div id="message-container">
+          <div id="message"></div>
+        </div>
 		    <div id="board"></div>
-        <div id="help">
-          Sterowanie: 
-          <ul>
-            <li>p &mdash; pauza</li>
-            <li>&rarr; &mdash; przesunięcie bloku w prawo</li>
-            <li>&larr; &mdash; przesunięcie bloku w lewo</li>
-            <li>&uarr; &mdash; obrót bloku o 90&deg; w prawo</li>
-            <li>&darr;  &mdash; przyspiesza spadanie bloku</li>
-          </ul>
+        <div id="game-menu">
+          <div id="metadata">
+            <div id="next-block"></div>
+       	    <div id=""></div>
+            <div id="restart-container"><button id="restart">Start</button></div>
+            <div id="points-container">Punkty: <span id="points"></span></div>
+            <div id="line-container">Linie: <span id="lines"></span></div>
+            <div id="level-container">Poziom: <span id="level"></span></div>
+          </div>
+          <div id="help">
+            <h4>Sterowanie: </h4>
+            <ul id="help-items">
+              <li class="help-item">p &mdash; pauza</li>
+              <li class="help-item">&rarr; &mdash; przesunięcie bloku w prawo</li>
+              <li class="help-item">&larr; &mdash; przesunięcie bloku w lewo</li>
+              <li class="help-item">&uarr; &mdash; obrót bloku o 90&deg; w prawo</li>
+              <li class="help-item">&darr;  &mdash; przyspiesza spadanie bloku</li>
+            </ul>
+          </div>
         </div>
 	    </div>
 	  </div>

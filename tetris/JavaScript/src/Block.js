@@ -5,8 +5,14 @@ define(["./Board.js"], function(Board) {
     this._currentVersion = 0;
   }
   
+  Block.prototype.clone = function() {
+    var newBlock = new Block(this._symbol, this._versions);
+    newBlock._currentVersion = this._currentVersion;
+    return newBlock;
+  }
+  
   Block.prototype.canRotate = function(basePoint, board) {
-    return Board.isValidBlock(board, block.rotated(), basePoint)
+    return Board.isValidBlock(board, this.rotated(), basePoint);
   }
   
   Block.prototype.rotate = function() {
@@ -14,7 +20,7 @@ define(["./Board.js"], function(Board) {
   }
   
   Block.prototype.rotated = function() {
-    var newBlock = new Block(this._symbol, this._versions);
+    var newBlock = this.clone();
     newBlock.rotate();
     return newBlock;
   }
@@ -24,20 +30,20 @@ define(["./Board.js"], function(Board) {
   }
   
   Block.prototype.erase = function(basePoint, board) {
-    this.points(basePoint).forEach((p) => { 
+    this.points(basePoint).forEach((p) => {
         board[p.y][p.x].reset();
       });
   }
   
   Block.prototype.draw = function(basePoint, board) {
     this.points(basePoint).forEach((p) => { 
-        board[p.y][p.x].set("block", this._symbol);
+        board[p.y][p.x].set("block " + this._symbol + "-block", this._symbol);
       });
   }
   
   Block.prototype.fasten = function(basePoint, board) {
     this.points(basePoint).forEach((p) => { 
-      board[p.y][p.x].set("final", "x");
+      board[p.y][p.x].set("final " + this._symbol + "-block" , "x");
     });
   }
   
@@ -45,6 +51,12 @@ define(["./Board.js"], function(Board) {
     this.erase(basePoint, board);
     f();
     this.draw(basePoint, board);
+  }
+  
+  Block.prototype.randomVersion = function() {
+    var newBlock = this.clone();
+    newBlock._currentVersion = Math.floor(Math.random() * this._versions.length);
+    return newBlock;
   }
   
   return Block;
