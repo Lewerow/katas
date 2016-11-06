@@ -1,8 +1,8 @@
 define(["./Cell", "./Board", "./BlockGenerator"], function(Cell, Board, BlockGenerator) {
   const defaultFastRoundDelay = 25;
   const defaultNormalRoundDelay = 400;
-  const levelCount = 10;
-  const linesPerLevel = 10;
+  const levelCount = 3;
+  const linesPerLevel = 1;
   function Game(board, hintBox) {
     this._board = board;
     this._hintBox = hintBox;
@@ -23,9 +23,12 @@ define(["./Cell", "./Board", "./BlockGenerator"], function(Cell, Board, BlockGen
   }
   
   Game.prototype.speedUp = function() {
-    this._normalRoundDelay -= (defaultNormalRoundDelay - defaultFastRoundDelay) / levelCount;
-    if(this._normalRoundDelay < defaultFastRoundDelay)
-      this._normalRoundDelay = defaultFastRoundDelay;
+    if(this._level > levelCount) {
+      return;
+    }
+    
+    this._normalRoundDelay *= Math.pow((3 * defaultFastRoundDelay) / this._normalRoundDelay, 
+      1 / (levelCount - this._level + 1));
   }
   
   Game.prototype.getFastRoundDelay = function() {
