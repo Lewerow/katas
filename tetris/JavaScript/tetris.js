@@ -214,10 +214,10 @@ var Controller = (function() {
           this._game.moveBlockDown();
           this.play();p
         }
-        ev.preventDefault();
-        ev.returnValue = false;
         break;
     }
+    ev.preventDefault();
+    ev.returnValue = false;
   }
   
   Controller.prototype.visibilityHandler = function() {
