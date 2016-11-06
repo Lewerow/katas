@@ -1,8 +1,8 @@
 define(["./Cell", "./Board", "./BlockGenerator"], function(Cell, Board, BlockGenerator) {
   const defaultFastRoundDelay = 25;
   const defaultNormalRoundDelay = 400;
-  const levelCount = 3;
-  const linesPerLevel = 1;
+  const levelCount = 10;
+  const linesPerLevel = 10;
   function Game(board, hintBox) {
     this._board = board;
     this._hintBox = hintBox;
