@@ -13,6 +13,9 @@ import Keyboard.Keys as Keys exposing (arrowUp, arrowDown, arrowLeft, arrowRight
 import Array
 import Random
 
+import Task
+import Process
+
 main: Program Never
 main = App.program {
   init = init,
@@ -61,30 +64,36 @@ type alias BoardState = {
 type alias Stats = {
   points: Int,
   lines: Int,
-  level: Int
+  level: Int,
+  stepDelay: Time
 }
 
 type alias Game = {
   gameBoardState: BoardState,
   hintBoardState: BoardState,
   stats: Stats,
-  status: Status
+  status: Status,
+  fastModeOn: Bool
   }
 
 type alias Model = Game
 
-init : (Model, Cmd Msg)
-init = (placeBlocks {
-  gameBoardState= { size={width=8, height=30},
-    id="board", defaultCellClass="cell", cells=repeat 8 30 Free,
-    activeBlock={block=OBlock,orientation=E,basePoint={x=4,y=4}}},
+initialModel : Model
+initialModel = {
+  gameBoardState= { size={width=15, height=30},
+    id="board", defaultCellClass="cell", cells=repeat 15 30 Free,
+    activeBlock={block=OBlock,orientation=E,basePoint={x=7,y=0}}},
   hintBoardState={ size={width=5, height=5},
     id="next-block", defaultCellClass="invisible-cell", cells=repeat 5 5 Free,
     activeBlock={block=ZBlock,orientation=E,basePoint={x=2,y=1}}},
-  stats={points=0,lines=0,level=0}, status={game=NotStarted,pause=Running}
-  }, Cmd.none)
+  stats={points=0,lines=0,level=0,stepDelay=400 * Time.millisecond },
+  status={game=NotStarted,pause=Running}, fastModeOn=False
+  }
 
-type Msg = Tick () |
+init : (Model, Cmd Msg)
+init = (initialModel, Cmd.none)
+
+type Msg = TickMove |
   KeyDown KeyCode |
   KeyUp KeyCode |
   Restart |
@@ -96,26 +105,64 @@ placeBlocks g = {g |
   hintBoardState=drawActiveBlock g.hintBoardState
   }
 
+delayMessage : Msg -> Time -> Cmd Msg
+delayMessage msg time = let f = \_ -> msg in
+  Task.perform f f (Process.sleep time)
+
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model = case msg of
-  Tick _ ->
-    if model.status.pause == Paused || model.status.game /= Ongoing then (model, Cmd.none)
-    else moveActiveBlock Down model
+  TickMove ->
+    if model.status.game == Finished then (model, Cmd.none)
+    else if model.status.pause == Paused  then (model, delayMessage TickMove (getDelay model))
+    else let (newModel, baseCmd) = moveActiveBlock Down model in
+      (newModel, Cmd.batch [ baseCmd, delayMessage TickMove (getDelay newModel) ])
   KeyDown key -> (handleKeyDown key model, Cmd.none)
-  KeyUp key -> (model, Cmd.none)
-  Restart -> ({model | status={pause=Running, game=Ongoing}}, Cmd.none)
+  KeyUp key -> ( if key == arrowDown.keyCode then { model | fastModeOn=False} else model, Cmd.none)
+  Restart -> let
+    (commands, gameBoard) = fetchNextBlock initialModel.hintBoardState initialModel.gameBoardState in
+    ({initialModel | status={pause=Running, game=Ongoing}}, Cmd.batch [delayMessage TickMove (getDelay initialModel), commands])
   NextBlock block -> (hintNextBlock model block, Cmd.none)
 
-hintNextBlock : Model -> (Block, Orientation) -> Model
-hintNextBlock model newBlock = { model | hintBoardState=setNewBlock model.hintBoardState newBlock }
+getDelay : Model -> Time
+getDelay model = if model.fastModeOn then minStep else model.stats.stepDelay
 
-setNewBlock : BoardState -> (Block, Orientation) -> BoardState
-setNewBlock board (b, o) = {board | activeBlock={block=b,orientation=o,basePoint={x=2,y=1}}}
+rotate : BoardState -> Maybe BoardState
+rotate board = if canBeRotated board.activeBlock board then
+    Just <| drawActiveBlock { board | activeBlock = rotateBlock board.activeBlock  }
+  else
+    Nothing
+
+canBeRotated : BlockRecord -> BoardState -> Bool
+canBeRotated block board = rotateBlock block |> getAddresses |>
+  List.map (\p -> get p.x p.y board.cells) |>
+  List.foldl (\cell isOk ->
+    isOk && (Maybe.withDefault False <| Maybe.map (\x -> not <| isFixed x) cell))
+    True
+
+rotateBlock : BlockRecord -> BlockRecord
+rotateBlock block = let
+  newOrientation = case block.orientation of
+  W -> S
+  N -> W
+  E -> N
+  S -> E in
+  { block | orientation = newOrientation }
+
+hintNextBlock : Model -> (Block, Orientation) -> Model
+hintNextBlock model newBlock = { model | hintBoardState=
+  (model.hintBoardState |> clearActiveBlock |> setNewBlock newBlock |> drawActiveBlock)
+  }
+
+setNewBlock : (Block, Orientation) -> BoardState -> BoardState
+setNewBlock (b, o) board =
+  {board | activeBlock={block=b,orientation=o,basePoint={x=2,y=1}}}
 
 handleKeyDown : KeyCode -> Model -> Model
 handleKeyDown key model =
   if key == 80 then
     togglePause model
+  else if key == arrowDown.keyCode then
+    { model | fastModeOn=True}
   else
     moveBlock key model
 
@@ -130,6 +177,7 @@ moveBlock key model = let
   movedBoard =
     if key == arrowRight.keyCode then moveIfPossible Right clearedBoard
     else if key == arrowLeft.keyCode then moveIfPossible Left clearedBoard
+    else if key == arrowUp.keyCode then rotate clearedBoard
     else Nothing
   in
   { model | gameBoardState = Maybe.withDefault model.gameBoardState movedBoard }
@@ -147,15 +195,36 @@ moveActiveBlock direction model = let
         clearBoard |> drawFixedBlock |> clearFullLines
       (command, newGameBoardState) =
          fetchNextBlock model.hintBoardState gameBoard
-      in ({ model | gameBoardState=newGameBoardState,
-    stats = appendStats model.stats clearedLines }, command)
+      in
+    if isValidActiveBlock newGameBoardState.activeBlock newGameBoardState.cells then
+      ({ model | gameBoardState=newGameBoardState,
+        stats = appendStats model.stats clearedLines }, command)
+    else ({
+      model | gameBoardState=newGameBoardState,
+        stats = appendStats model.stats clearedLines,
+        status = { pause= model.status.pause, game=Finished }
+    }, command)
 
 appendStats : Stats -> Int -> Stats
-appendStats s1 clearedLines = {
+appendStats s1 clearedLines = let
+  newLevel = (s1.lines + clearedLines) // maxLevel in
+  {
   points=s1.points+clearedLines^2,
   lines=s1.lines+clearedLines,
-  level=(s1.lines + clearedLines) // 10
+  level= newLevel,
+  stepDelay= if newLevel /= s1.level then calcDelay s1.stepDelay newLevel else s1.stepDelay
   }
+
+minStep : Time
+minStep = 25 * Time.millisecond
+
+maxLevel : Int
+maxLevel = 10
+
+calcDelay : Time -> Int -> Time
+calcDelay step level =
+  if level > maxLevel then 3 * minStep
+  else  step * ((3*minStep / step) ^ (1.0 / (toFloat (maxLevel - level + 1))))
 
 clearFullLines : BoardState -> (Int, BoardState)
 clearFullLines board = let
@@ -194,6 +263,14 @@ isMovable direction board =
     isOk && (Maybe.withDefault False <| Maybe.map (\x -> not <| isFixed x) cell))
     True
 
+isValidActiveBlock : BlockRecord -> Matrix CellContent -> Bool
+isValidActiveBlock block cells =
+  getAddresses block |>
+  List.map (\p -> get p.x p.y cells) |>
+  List.foldl (\cell isOk ->
+    isOk && (Maybe.withDefault False <| Maybe.map (\x -> not <| isFixed x) cell))
+    True
+
 move : Direction -> Point -> Point
 move direction addr = case direction of
   Down -> {addr | y=addr.y+1}
@@ -203,7 +280,16 @@ move direction addr = case direction of
 
 fetchNextBlock : BoardState -> BoardState -> (Cmd Msg, BoardState)
 fetchNextBlock hintBoard gameBoard = let nextBlock=hintBoard.activeBlock in
-  (generateNewBlock, {gameBoard | activeBlock=nextBlock})
+  (generateNewBlock, {gameBoard | activeBlock={
+    block=nextBlock.block,
+    orientation=nextBlock.orientation,
+    basePoint=calculateBasePoint gameBoard nextBlock} })
+
+calculateBasePoint : BoardState -> BlockRecord -> Point
+calculateBasePoint board block =
+  { block | basePoint={x=0,y=0}} |> getAddresses |>
+    List.foldl (\p acc -> {x=Basics.min acc.x p.x, y = Basics.min acc.y p.y}) { x=0,y=0 }|>
+    \{x,y} -> { x=board.size.width // 2, y = -y }
 
 randomBlock : Random.Generator Int -> Random.Generator Block
 randomBlock = Random.map (\n -> case (n % 7)  of
@@ -255,12 +341,46 @@ getMask : Block -> Orientation -> List Point
 getMask block orientation = let pt x y = {x=x,y=y} in
   case block of
   OBlock -> [{x=0,y=0},{x=1,y=0},{x=1,y=1},{x=0,y=1}]
-  IBlock -> case orientation of
-    N -> [{x=0,y=-1},{x=0,y=0},{x=0,y=1},{x=0,y=2}]
-    S -> [{x=0,y=-1},{x=0,y=0},{x=0,y=1},{x=0,y=2}]
-    E -> [{x=0,y=-1},{x=0,y=0},{x=0,y=1},{x=0,y=2}]
-    W -> [{x=-1,y=0},{x=0,y=0},{x=1,y=0},{x=2,y=0}]
-  _ -> [pt 0 0, pt 0 1, pt 1 1, pt 1 2]
+  IBlock -> let
+    vertical = [pt -1 0, pt 0 0, pt 1 0, pt 2 0]
+    horizontal = [pt 0 -1, pt 0 0, pt 0 1, pt 0 2] in
+    case orientation of
+      N -> vertical
+      S -> vertical
+      E -> horizontal
+      W -> horizontal
+  LBlock -> case orientation of
+    N -> [pt 0 0, pt -1 0, pt -1 1, pt -1 2]
+    E -> [pt -2 0, pt -2 1, pt -1 1, pt 0 1]
+    S -> [pt 0 0, pt 0 1, pt 0 2, pt -1 2]
+    W -> [pt -2 0, pt -1 0, pt 0 0, pt 0 1]
+  FBlock -> case orientation of
+    N -> [pt -1 0, pt 0 0, pt 0 1, pt 0 2]
+    E -> [pt 0 0, pt -1 0, pt -2 0, pt -2 1]
+    S -> [pt -1 0, pt -1 1, pt -1 2, pt 0 2]
+    W -> [pt 0 0, pt 0 1, pt -1 1, pt -2 1]
+  HBlock -> case orientation of
+    N -> [pt -1 0, pt 0 0, pt 1 0, pt 0 1]
+    E -> [pt 0 -1, pt 0 0, pt 0 1, pt 1 0]
+    S -> [pt -1 0, pt 0 0, pt 1 0, pt 0 -1]
+    W -> [pt 0 -1, pt 0 0, pt 0 1, pt -1 0]
+  ZBlock -> let
+    vertical = [pt 0 0, pt 0 1, pt 1 1, pt 1 2]
+    horizontal = [pt 1 0, pt 0 0, pt 0 1, pt -1 1] in
+    case orientation of
+      N -> vertical
+      S -> vertical
+      E -> horizontal
+      W -> horizontal
+  SBlock -> let
+    vertical = [pt 1 0, pt 1 1, pt 0 1, pt 0 2]
+    horizontal = [pt -1 0, pt 0 0, pt 0 1, pt 1 1] in
+    case orientation of
+      N -> vertical
+      S -> vertical
+      E -> horizontal
+      W -> horizontal
+
 
 performMove : Direction -> BoardState -> BoardState
 performMove direction board = { board | activeBlock=moveWhole direction board.activeBlock}
@@ -271,7 +391,6 @@ moveWhole d b = { b | basePoint = move d b.basePoint}
 subscriptions : Model -> Sub Msg
 subscriptions model = Sub.batch
   [
-    Time.every (100*millisecond) (\_ -> Tick ()),
     Keyboard.downs KeyDown,
     Keyboard.ups KeyUp
   ]
