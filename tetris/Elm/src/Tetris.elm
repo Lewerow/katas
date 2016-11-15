@@ -12,6 +12,7 @@ import Keyboard as Keyboard exposing (ups, downs)
 import Keyboard.Keys as Keys exposing (arrowUp, arrowDown, arrowLeft, arrowRight)
 import Array
 import Random
+import PageVisibility
 
 import Task
 import Process
@@ -97,6 +98,8 @@ type Msg = TickMove |
   KeyDown KeyCode |
   KeyUp KeyCode |
   Restart |
+  RequestPause PageVisibility.Visibility |
+  SkipBlock (Block, Orientation) |
   NextBlock (Block, Orientation)
 
 placeBlocks : Game -> Game
@@ -118,9 +121,18 @@ update msg model = case msg of
       (newModel, Cmd.batch [ baseCmd, delayMessage TickMove (getDelay newModel) ])
   KeyDown key -> (handleKeyDown key model, Cmd.none)
   KeyUp key -> ( if key == arrowDown.keyCode then { model | fastModeOn=False} else model, Cmd.none)
+  RequestPause v -> (if model.status.game == Ongoing then {model | status={game=model.status.game, pause=Paused}} else model,
+      Cmd.none)
   Restart -> let
     (commands, gameBoard) = fetchNextBlock initialModel.hintBoardState initialModel.gameBoardState in
-    ({initialModel | status={pause=Running, game=Ongoing}}, Cmd.batch [delayMessage TickMove (getDelay initialModel), commands])
+    ({initialModel | status={pause=Running, game=Ongoing}, gameBoardState=gameBoard},
+      Cmd.batch [generateNewBlock SkipBlock, commands])
+  SkipBlock block -> let
+    (commands, gameBoard) = fetchNextBlock model.hintBoardState model.gameBoardState
+    hintedBoard = hintNextBlock model block
+    in
+      ({ hintedBoard | gameBoardState=gameBoard },
+      delayMessage TickMove (getDelay initialModel))
   NextBlock block -> (hintNextBlock model block, Cmd.none)
 
 getDelay : Model -> Time
@@ -280,7 +292,7 @@ move direction addr = case direction of
 
 fetchNextBlock : BoardState -> BoardState -> (Cmd Msg, BoardState)
 fetchNextBlock hintBoard gameBoard = let nextBlock=hintBoard.activeBlock in
-  (generateNewBlock, {gameBoard | activeBlock={
+  (generateNewBlock NextBlock, {gameBoard | activeBlock={
     block=nextBlock.block,
     orientation=nextBlock.orientation,
     basePoint=calculateBasePoint gameBoard nextBlock} })
@@ -310,9 +322,9 @@ randomOrientation = Random.map (\n -> case (n % 4)  of
   3 -> W
   _ -> N) -- to feed the compiler
 
-generateNewBlock : Cmd Msg
-generateNewBlock =
-  Random.generate NextBlock (Random.pair
+generateNewBlock : ((Block, Orientation) -> Msg) -> Cmd Msg
+generateNewBlock msgCreator =
+  Random.generate msgCreator (Random.pair
     (randomBlock (Random.int 0 6))
     (randomOrientation (Random.int 0 3))
   )
@@ -388,11 +400,14 @@ performMove direction board = { board | activeBlock=moveWhole direction board.ac
 moveWhole : Direction -> BlockRecord -> BlockRecord
 moveWhole d b = { b | basePoint = move d b.basePoint}
 
+
+
 subscriptions : Model -> Sub Msg
 subscriptions model = Sub.batch
   [
     Keyboard.downs KeyDown,
-    Keyboard.ups KeyUp
+    Keyboard.ups KeyUp,
+    PageVisibility.visibilityChanges RequestPause
   ]
 
 view : Model -> Html Msg
@@ -477,7 +492,7 @@ renderNextBlock model = renderBoard model.hintBoardState
 renderRestartButton : Model -> Html Msg
 renderRestartButton model = div [ id "restart-container" ]
   [ button [ id "restart", onClick Restart, disabled <| model.status.game == Ongoing ]
-    [ text "Start" ]
+    [ text <| if model.status.game == NotStarted then "Start" else "Restart" ]
   ]
 
 renderStats : Model -> Html Msg
