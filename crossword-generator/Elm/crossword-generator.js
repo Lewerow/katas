@@ -9865,84 +9865,67 @@ var _user$project$Analyzer$generateCrossword = function (_p0) {
 	}
 };
 
-var _user$project$App$renderEmptyBlock = function (k) {
-	return A2(
-		_elm_lang$core$List$repeat,
-		k,
-		A2(
-			_elm_lang$html$Html$td,
-			{
+var _user$project$App$getBlockClasses = function (b) {
+	var _p0 = b;
+	switch (_p0.ctor) {
+		case 'Cell':
+			return {
 				ctor: '::',
-				_0: _elm_lang$html$Html_Attributes$class('cell'),
+				_0: 'cell',
 				_1: {ctor: '[]'}
-			},
-			{ctor: '[]'}));
-};
-var _user$project$App$renderLetters = F2(
-	function (word, keywordLocation) {
-		return A2(
-			_elm_lang$core$List$map,
-			function (_p0) {
-				var _p1 = _p0;
-				return A2(
-					_elm_lang$html$Html$td,
-					A2(
-						_elm_lang$core$Basics_ops['++'],
-						{
-							ctor: '::',
-							_0: _elm_lang$html$Html_Attributes$class('cell'),
-							_1: {
-								ctor: '::',
-								_0: _elm_lang$html$Html_Attributes$class('letter'),
-								_1: {ctor: '[]'}
-							}
-						},
-						_p1._1 ? {
-							ctor: '::',
-							_0: _elm_lang$html$Html_Attributes$class('keyword'),
-							_1: {ctor: '[]'}
-						} : {ctor: '[]'}),
-					{
+			};
+		case 'Letter':
+			return {
+				ctor: '::',
+				_0: 'cell',
+				_1: {
+					ctor: '::',
+					_0: 'letter',
+					_1: {ctor: '[]'}
+				}
+			};
+		default:
+			return {
+				ctor: '::',
+				_0: 'cell',
+				_1: {
+					ctor: '::',
+					_0: 'letter',
+					_1: {
 						ctor: '::',
-						_0: _elm_lang$html$Html$text(
-							_elm_lang$core$String$fromChar(_p1._0)),
+						_0: 'keyword',
 						_1: {ctor: '[]'}
-					});
-			},
-			A2(
-				_elm_lang$core$List$indexedMap,
-				F2(
-					function (index, x) {
-						return {
-							ctor: '_Tuple2',
-							_0: x,
-							_1: _elm_lang$core$Native_Utils.eq(index, keywordLocation)
-						};
-					}),
-				_elm_lang$core$String$toList(word)));
-	});
-var _user$project$App$renderWord = F3(
-	function (keywordColumn, totalColumns, crosswordWord) {
-		return A2(
-			_elm_lang$html$Html$tr,
-			{
-				ctor: '::',
-				_0: _elm_lang$html$Html_Attributes$class('word'),
-				_1: {ctor: '[]'}
-			},
-			A2(
-				_elm_lang$core$Basics_ops['++'],
-				_user$project$App$renderEmptyBlock(crosswordWord.startColumn),
-				A2(
-					_elm_lang$core$Basics_ops['++'],
-					A2(_user$project$App$renderLetters, crosswordWord.word, keywordColumn - crosswordWord.startColumn),
-					_user$project$App$renderEmptyBlock(
-						(totalColumns - _elm_lang$core$String$length(crosswordWord.word)) - crosswordWord.startColumn))));
-	});
-var _user$project$App$renderCrossword = function (s) {
-	var render = A2(_user$project$App$renderWord, s.keywordColumn, s.totalColumns);
-	return A2(_elm_lang$core$List$map, render, s.words);
+					}
+				}
+			};
+	}
 };
+var _user$project$App$renderBlock = function (_p1) {
+	var _p2 = _p1;
+	return A2(
+		_elm_lang$html$Html$td,
+		A2(
+			_elm_lang$core$List$map,
+			_elm_lang$html$Html_Attributes$class,
+			_user$project$App$getBlockClasses(_p2._0)),
+		{
+			ctor: '::',
+			_0: _elm_lang$html$Html$text(
+				A3(_elm_community$maybe_extra$Maybe_Extra$unwrap, '', _elm_lang$core$String$fromChar, _p2._1)),
+			_1: {ctor: '[]'}
+		});
+};
+var _user$project$App$renderWord = function (crosswordWord) {
+	return A2(
+		_elm_lang$html$Html$tr,
+		{
+			ctor: '::',
+			_0: _elm_lang$html$Html_Attributes$class('word'),
+			_1: {ctor: '[]'}
+		},
+		A2(_elm_lang$core$List$map, _user$project$App$renderBlock, crosswordWord));
+};
+var _user$project$App$renderCrossword = _elm_lang$core$List$map(_user$project$App$renderWord);
 var _user$project$App$view = function (model) {
 	return A2(
 		_elm_lang$html$Html$table,
@@ -9953,50 +9936,41 @@ var _user$project$App$view = function (model) {
 		},
 		_user$project$App$renderCrossword(model.structure));
 };
-var _user$project$App$noStructure = {
-	words: {ctor: '[]'},
-	keywordColumn: 5,
-	totalColumns: 10
+var _user$project$App$getCrosswordWidth = function (words) {
+	return function (_p3) {
+		var _p4 = _p3;
+		return function (_p5) {
+			var _p6 = _p5;
+			var _p7 = _p6._0;
+			return {ctor: '_Tuple2', _0: _p7, _1: _p7 + _p6._1};
+		}(
+			{
+				ctor: '_Tuple2',
+				_0: A2(
+					_elm_community$maybe_extra$Maybe_Extra_ops['?'],
+					_elm_lang$core$List$maximum(_p4._0),
+					0),
+				_1: A2(
+					_elm_community$maybe_extra$Maybe_Extra_ops['?'],
+					_elm_lang$core$List$maximum(_p4._1),
+					0)
+			});
+	}(
+		_elm_lang$core$List$unzip(
+			A2(
+				_elm_lang$core$List$map,
+				function (_p8) {
+					var _p9 = _p8;
+					var _p10 = _p9._1;
+					return {
+						ctor: '_Tuple2',
+						_0: _elm_lang$core$String$length(_p9._0) - _p10,
+						_1: _p10
+					};
+				},
+				words)));
 };
-var _user$project$App$makeStructure = F2(
-	function (words, keyword) {
-		var solution = _user$project$Analyzer$generateCrossword(
-			{ctor: '_Tuple2', _0: words, _1: keyword});
-		return A3(
-			_elm_community$maybe_extra$Maybe_Extra$unwrap,
-			_user$project$App$noStructure,
-			function (s) {
-				return {
-					words: A2(
-						_elm_lang$core$List$map,
-						function (_p2) {
-							var _p3 = _p2;
-							return {word: _p3._0, startColumn: 5 - _p3._1};
-						},
-						s),
-					keywordColumn: 5,
-					totalColumns: 10
-				};
-			},
-			solution);
-	});
-var _user$project$App$newCrossword = function (_p4) {
-	var _p5 = _p4;
-	var _p7 = _p5._0._0;
-	var _p6 = _p5._0._1;
-	return {
-		keys: {keyword: _p6, words: _p7},
-		structure: A2(_user$project$App$makeStructure, _p7, _p6)
-	};
-};
-var _user$project$App$update = F2(
-	function (msg, model) {
-		return {
-			ctor: '_Tuple2',
-			_0: _user$project$App$newCrossword(msg),
-			_1: _elm_lang$core$Platform_Cmd$none
-		};
-	});
+var _user$project$App$noStructure = {ctor: '[]'};
 var _user$project$App$subscriptions = function (model) {
 	return _elm_lang$core$Platform_Sub$batch(
 		{ctor: '[]'});
@@ -10019,14 +9993,6 @@ var _user$project$App$CrosswordKeys = F2(
 	function (a, b) {
 		return {keyword: a, words: b};
 	});
-var _user$project$App$CrosswordWord = F2(
-	function (a, b) {
-		return {word: a, startColumn: b};
-	});
-var _user$project$App$CrosswordStructure = F3(
-	function (a, b, c) {
-		return {words: a, keywordColumn: b, totalColumns: c};
-	});
 var _user$project$App$Model = F2(
 	function (a, b) {
 		return {keys: a, structure: b};
@@ -10045,29 +10011,109 @@ var _user$project$App$init = {
 	},
 	_1: A2(
 		_elm_lang$core$Task$perform,
-		function (_p8) {
+		function (_p11) {
 			return _user$project$App$Reanalyze(
 				{
 					ctor: '_Tuple2',
 					_0: {
 						ctor: '::',
-						_0: 'ALA',
+						_0: 'ALICJA',
 						_1: {
 							ctor: '::',
-							_0: 'KOT',
+							_0: 'OWCA',
 							_1: {
 								ctor: '::',
 								_0: 'KOZA',
-								_1: {ctor: '[]'}
+								_1: {
+									ctor: '::',
+									_0: 'PIES',
+									_1: {
+										ctor: '::',
+										_0: 'MRÓWKA',
+										_1: {
+											ctor: '::',
+											_0: 'MAMR',
+											_1: {ctor: '[]'}
+										}
+									}
+								}
 							}
 						}
 					},
-					_1: 'AOZ'
+					_1: 'LCKIÓR'
 				});
 		},
 		_elm_lang$core$Task$succeed(
 			{ctor: '_Tuple0'}))
 };
+var _user$project$App$Keyword = {ctor: 'Keyword'};
+var _user$project$App$Letter = {ctor: 'Letter'};
+var _user$project$App$Cell = {ctor: 'Cell'};
+var _user$project$App$emptyCells = function (n) {
+	return A2(
+		_elm_lang$core$List$repeat,
+		n,
+		{ctor: '_Tuple2', _0: _user$project$App$Cell, _1: _elm_lang$core$Maybe$Nothing});
+};
+var _user$project$App$makeStructure = F2(
+	function (words, keyword) {
+		var solution = _user$project$Analyzer$generateCrossword(
+			{ctor: '_Tuple2', _0: words, _1: keyword});
+		var _p12 = solution;
+		if (_p12.ctor === 'Nothing') {
+			return _user$project$App$noStructure;
+		} else {
+			var _p18 = _p12._0;
+			var _p13 = _user$project$App$getCrosswordWidth(_p18);
+			var keywordColumn = _p13._0;
+			var width = _p13._1;
+			var toCells = function (_p14) {
+				var _p15 = _p14;
+				var _p17 = _p15._0;
+				var _p16 = _p15._1;
+				return A2(
+					_elm_lang$core$Basics_ops['++'],
+					_user$project$App$emptyCells(keywordColumn - _p16),
+					A2(
+						_elm_lang$core$Basics_ops['++'],
+						A2(
+							_elm_lang$core$List$indexedMap,
+							F2(
+								function (i, l) {
+									return _elm_lang$core$Native_Utils.eq(i, _p16) ? {
+										ctor: '_Tuple2',
+										_0: _user$project$App$Keyword,
+										_1: _elm_lang$core$Maybe$Just(l)
+									} : {
+										ctor: '_Tuple2',
+										_0: _user$project$App$Letter,
+										_1: _elm_lang$core$Maybe$Just(l)
+									};
+								}),
+							_elm_lang$core$String$toList(_p17)),
+						_user$project$App$emptyCells(
+							((width - _elm_lang$core$String$length(_p17)) - keywordColumn) + _p16)));
+			};
+			return A2(_elm_lang$core$List$map, toCells, _p18);
+		}
+	});
+var _user$project$App$newCrossword = function (_p19) {
+	var _p20 = _p19;
+	var _p22 = _p20._0._0;
+	var _p21 = _p20._0._1;
+	return {
+		keys: {keyword: _p21, words: _p22},
+		structure: A2(_user$project$App$makeStructure, _p22, _p21)
+	};
+};
+var _user$project$App$update = F2(
+	function (msg, model) {
+		return {
+			ctor: '_Tuple2',
+			_0: _user$project$App$newCrossword(msg),
+			_1: _elm_lang$core$Platform_Cmd$none
+		};
+	});
 var _user$project$App$main = _elm_lang$html$Html$program(
 	{init: _user$project$App$init, view: _user$project$App$view, update: _user$project$App$update, subscriptions: _user$project$App$subscriptions})();
 

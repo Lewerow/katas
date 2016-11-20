@@ -1,6 +1,6 @@
 #crossword {
    border-spacing: 0px;
-   border-collapse:collapse;   
+   border-collapse:collapse;
 }
 
 .word {
@@ -14,10 +14,9 @@
 
 .cell {
   width: 30px;
-  height: 30px,auto;
+  height: 30px;
   margin: 0;
   padding: 0;
-
 }
 
 .letter {
@@ -25,6 +24,6 @@
 }
 
 .keyword {
-  border: 2px solid black;
+  border-width: 2px;
   background-color: gray;
 }

@@ -2,6 +2,7 @@ module Analyzer exposing (generateCrossword, Solution, Problem)
 
 import String
 import List
+import Lazy.List
 import List.Extra
 import Maybe.Extra
 
