@@ -6,6 +6,7 @@ import List
 import String
 import Task
 import Maybe.Extra exposing ((?))
+import Lazy.List as LL
 
 import Analyzer
 
@@ -56,7 +57,7 @@ newCrossword (Reanalyze (newWords, newKeyword)) =
 noStructure = []
 
 makeStructure words keyword =
-  let solution = Analyzer.generateCrossword (words, keyword) in
+  let solution = LL.head <| Analyzer.generateCrossword (words, keyword) in
   case solution of
     Nothing -> noStructure
     Just s -> let
