@@ -41,7 +41,7 @@ init : (Model, Cmd Msg)
 init = ({keys={keyword="", words=[]},
   structure=noStructure},
   Task.perform (\_ ->
-    Reanalyze (["ALICJA","OWCA","KOZA", "PIES", "MRÓWKA", "MAMR"], "LCKIÓR"))
+    Reanalyze (["ALICJA","OWCA","KOZA", "PIES", "MRÓWKA"], "JOKER"))
     (Task.succeed ())
   )
 
@@ -91,7 +91,7 @@ renderWord crosswordWord =
 
 renderBlock (blockType, letter) =
   Html.td (getBlockClasses blockType |> List.map Html.Attributes.class)
-    [Html.text <| Maybe.Extra.unwrap "" String.fromChar letter]
+    [ Html.div [Html.Attributes.class "filler"] [Html.text <| Maybe.Extra.unwrap "" String.fromChar letter]]
 
 getBlockClasses b = case b of
   Cell -> ["cell"]
