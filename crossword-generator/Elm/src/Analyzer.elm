@@ -1,4 +1,4 @@
-module Analyzer exposing (generateCrossword)
+module Analyzer exposing (generateCrossword, Solution, Problem)
 
 import String
 import List
@@ -7,9 +7,10 @@ import Maybe.Extra
 
 type alias WordPadding = (String, Int)
 type alias Solution = List WordPadding
+type alias Problem = (List String, String )
 
-generateCrossword : List String -> String -> Maybe Solution
-generateCrossword words keyword = case words of
+generateCrossword : Problem -> Maybe Solution
+generateCrossword (words, keyword) = case words of
   [] -> Nothing
   _ -> let
     paddings = List.map2
