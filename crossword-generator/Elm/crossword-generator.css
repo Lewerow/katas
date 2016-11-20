@@ -1,6 +1,5 @@
 #crossword {
-   border-spacing: 0px;
-   border-collapse:collapse;
+   border-spacing: 1px;
 }
 
 .word {
@@ -13,9 +12,10 @@
 }
 
 .cell {
+  box-sizing: border-box;
   width: 30px;
   height: 30px;
-  margin: 0;
+  margin: 0px;
   padding: 0;
 }
 

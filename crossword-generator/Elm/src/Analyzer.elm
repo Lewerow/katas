@@ -2,24 +2,22 @@ module Analyzer exposing (generateCrossword, Solution, Problem)
 
 import String
 import List
-import Lazy.List
+import Lazy.List as LL
 import List.Extra
-import Maybe.Extra
 
 type alias WordPadding = (String, Int)
 type alias Solution = List WordPadding
 type alias Problem = (List String, String )
 
-generateCrossword : Problem -> Maybe Solution
+generateCrossword : Problem -> LL.LazyList Solution
 generateCrossword (words, keyword) = case words of
-  [] -> Nothing
+  [] -> LL.empty
   _ -> let
-    paddings = List.map2
-      (\word letter ->
-        List.Extra.elemIndex letter (String.toList word) |>
-        Maybe.map (\i -> (word, i))
-      )
-      words
-      (String.toList keyword) in
-    if String.length keyword <= List.length paddings then Maybe.Extra.combine paddings
-    else Nothing
+    paddings =
+      List.Extra.zip words (String.toList keyword) |>
+      List.filterMap (\(word, letter) ->
+          List.Extra.elemIndex letter (String.toList word) |>
+          Maybe.map (\i -> (word, i))
+        ) in
+    if String.length keyword <= List.length paddings then LL.singleton paddings
+    else LL.empty
