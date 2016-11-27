@@ -118,7 +118,7 @@ renderHelp model = div [ id "help" ] [
         li [class "help-item"] [ text <| "p " ++ (asString 8212) ++ " pauza"],
         li [class "help-item"] [ text <| (asString 8594)++ " " ++ (asString 8212)
           ++ " przesunięcie bloku w prawo"],
-        li [class "help-item"] [ text <| (asString 8596) ++ " " ++ (asString 8212)
+        li [class "help-item"] [ text <| (asString 8592) ++ " " ++ (asString 8212)
           ++ " przesunięcie bloku w lewo"],
         li [class "help-item"] [ text <|  (asString 8593) ++ " "
           ++ (asString 8212) ++ " obrót bloku o 90" ++ (asString 176)
