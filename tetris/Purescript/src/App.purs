@@ -14,15 +14,22 @@ import Halogen.HTML.Properties as P
 import Control.Monad.Aff (Aff)
 import Control.Monad.Eff (Eff)
 
+import Data.List.Lazy as LL
 import GameStats as GameStats
 import RestartButton as RestartButton
 import GameState as GameState
 import Help as Help
+import Board as Board
+import Block as Block
 
-type State = { on :: Boolean
+type State = {on :: Boolean
   , gameState :: GameState.GameState
   , gameStats :: GameStats.GameStats
+  , blocks :: LL.List Block.Block
+  , gameBoard :: Board.Board
+  , hintBoard :: Board.Board
 }
+
 data Query a = ToggleState a | GetState (Boolean -> a)
 
 app :: forall g. Component State Query g
@@ -37,10 +44,10 @@ app = component { render, eval }
             H.div [P.id_ "message-container"] [
               H.div [P.id_ "message"] []
             ],
-            H.div [P.id_ "board"] (renderBoard state),
+            Board.render "board" state.gameBoard (LL.index state.blocks 1),
             H.div [P.id_ "game-menu"] [
               H.div [P.id_ "metadata"] [
-                H.div [P.id_ "next-block"] (renderNextBlock state),
+                Board.render "next-block" state.hintBoard (LL.head state.blocks),
                 H.div [P.id_ "restart-container"] [
                   RestartButton.render state.gameState
                 ],
@@ -54,11 +61,8 @@ app = component { render, eval }
 
   eval :: Query ~> ComponentDSL State Query g
   eval (ToggleState n) = do
-    modify (\s -> s { on = not s.on })
+    modify (\s -> s)
     pure n
   eval (GetState f) = do
     value <- gets _.on
     pure (f value)
-
-renderBoard state = [H.div [P.class_ (H.className "cell")] [] ]
-renderNextBlock state = [H.div [P.class_ (H.className "cell")] [] ]

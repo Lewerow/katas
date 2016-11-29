@@ -34,7 +34,7 @@ initialModel = {
   hintBoardState={ size={width=5, height=5},
     id="next-block", defaultCellClass="invisible-cell", cells=repeat 5 5 Free,
     activeBlock={block=ZBlock,orientation=E,basePoint={x=2,y=1}}},
-  stats={points=0,lines=0,level=0,stepDelay=400 * Time.millisecond },
+  stats={points=0,lines=0,level=1,stepDelay=400 * Time.millisecond },
   status={game=NotStarted,pause=Running}, fastModeOn=False
   }
 
