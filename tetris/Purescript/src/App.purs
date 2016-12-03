@@ -1,7 +1,8 @@
 module App where
 
 import DOM.HTML.HTMLElement (offsetHeight)
-import Data.Maybe (Maybe(..), fromMaybe)
+import Data.Foreign.Index (class Index)
+import Data.Maybe (Maybe(..), fromJust)
 import Halogen (ParentComponentSpec)
 import Halogen.HTML.Properties.ARIA (orientation)
 
@@ -15,7 +16,7 @@ import Halogen.HTML.Properties as P
 import Control.Monad.Aff (Aff)
 import Control.Monad.Eff (Eff)
 
-import Data.List.Lazy as LL
+import Data.List.Infinite as IL
 import GameStats as GameStats
 import RestartButton as RestartButton
 import GameState as GameState
@@ -23,21 +24,14 @@ import Help as Help
 import Board as Board
 import Block as Block
 
-type State = {on :: Boolean
-  , gameState :: GameState.GameState
+type State = {gameState :: GameState.GameState
   , gameStats :: GameStats.GameStats
-  , blocks :: LL.List Block.Block
+  , blocks :: IL.List (Block.Block)
   , gameBoard :: Board.Board
   , hintBoard :: Board.Board
 }
 
-defaultBlock = Block.Block {
-  blockType: Block.IBlock,
-  orientation: Block.N,
-  position: { x: 2, y: 2 }
-}
-
-data Query a = ToggleState a | GetState (Boolean -> a)
+data Query a = Tick a
 
 app :: forall g. Component State Query g
 app = component { render, eval }
@@ -51,10 +45,10 @@ app = component { render, eval }
             H.div [P.id_ "message-container"] [
               H.div [P.id_ "message"] []
             ],
-            Board.render "board" state.gameBoard (fromMaybe defaultBlock $ LL.index state.blocks 1),
+            Board.render "board" state.gameBoard (IL.index state.blocks 0),
             H.div [P.id_ "game-menu"] [
               H.div [P.id_ "metadata"] [
-                Board.render "next-block" state.hintBoard (fromMaybe defaultBlock $ LL.head state.blocks),
+                Board.render "next-block" state.hintBoard (IL.index state.blocks 1),
                 H.div [P.id_ "restart-container"] [
                   RestartButton.render state.gameState
                 ],
@@ -67,9 +61,10 @@ app = component { render, eval }
       ]
 
   eval :: Query ~> ComponentDSL State Query g
-  eval (ToggleState n) = do
-    modify (\s -> s)
+  eval (Tick n) = do
+    modify stepDownModifier
     pure n
-  eval (GetState f) = do
-    value <- gets _.on
-    pure (f value)
+
+stepDownModifier state =
+  let movedBlock = IL.head state.blocks in
+    state { blocks = movedBlock `IL.cons` IL.tail state.blocks }

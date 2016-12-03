@@ -32,7 +32,7 @@ getClassName t = case t of
 abs :: Int -> Int
 abs i = if i > 0 then i else -i
 
-getBlock :: Int -> BlockType
+getBlock :: Partial => Int -> BlockType
 getBlock i = case abs i of
  0 -> IBlock
  1 -> LBlock
@@ -41,15 +41,13 @@ getBlock i = case abs i of
  4 -> ZBlock
  5 -> SBlock
  6 -> OBlock
- _ -> IBlock
 
-getOrientation :: Int -> Orientation
+getOrientation :: Partial => Int -> Orientation
 getOrientation i = case abs i of
  0 -> N
  1 -> E
  2 -> S
  3 -> W
- _ -> N
 
 isCovered :: Int -> Int -> Block -> Boolean
 isCovered x0 y0 (Block { blockType, orientation, position }) =
@@ -58,7 +56,7 @@ isCovered x0 y0 (Block { blockType, orientation, position }) =
      isJust $ findIndex (\{ x, y } -> x == x0 && y == y0) mask
 
 
-arbitraryBlock :: Int -> Block
+arbitraryBlock :: Partial => Int -> Block
 arbitraryBlock i = Block {
   blockType: getBlock $ i `mod` 7
   , orientation: getOrientation $ i `mod` 4

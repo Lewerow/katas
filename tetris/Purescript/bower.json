@@ -16,7 +16,9 @@
     "purescript-matrices": "^2.0.0",
     "purescript-random": "^2.0.0",
     "purescript-math": "^2.0.0",
-    "purescript-prng": "^0.1.0"
+    "purescript-prng": "^0.1.0",
+    "purescript-infinite-lists": "^1.1.0",
+    "purescript-tailrec": "^2.0.1"
   },
   "devDependencies": {
     "purescript-psci-support": "^2.0.0",
