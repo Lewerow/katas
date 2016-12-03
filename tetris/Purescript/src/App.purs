@@ -1,8 +1,9 @@
 module App where
 
 import DOM.HTML.HTMLElement (offsetHeight)
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe(..), fromMaybe)
 import Halogen (ParentComponentSpec)
+import Halogen.HTML.Properties.ARIA (orientation)
 
 import Prelude
 
@@ -30,6 +31,12 @@ type State = {on :: Boolean
   , hintBoard :: Board.Board
 }
 
+defaultBlock = Block.Block {
+  blockType: Block.IBlock,
+  orientation: Block.N,
+  position: { x: 2, y: 2 }
+}
+
 data Query a = ToggleState a | GetState (Boolean -> a)
 
 app :: forall g. Component State Query g
@@ -44,10 +51,10 @@ app = component { render, eval }
             H.div [P.id_ "message-container"] [
               H.div [P.id_ "message"] []
             ],
-            Board.render "board" state.gameBoard (LL.index state.blocks 1),
+            Board.render "board" state.gameBoard (fromMaybe defaultBlock $ LL.index state.blocks 1),
             H.div [P.id_ "game-menu"] [
               H.div [P.id_ "metadata"] [
-                Board.render "next-block" state.hintBoard (LL.head state.blocks),
+                Board.render "next-block" state.hintBoard (fromMaybe defaultBlock $ LL.head state.blocks),
                 H.div [P.id_ "restart-container"] [
                   RestartButton.render state.gameState
                 ],
