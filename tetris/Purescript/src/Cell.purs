@@ -1,13 +1,12 @@
 module Cell where
 
-import Data.Maybe (Maybe(Just))
 import Halogen.HTML as H
+import Block (BlockType, getClassName)
+import Data.Maybe (Maybe(Just))
 
-data CellType = Free | Fixed
-
-getClass :: Maybe CellType -> H.ClassName
-getClass (Just Fixed) = fixedCellClass
-getClass _ = emptyCellClass
+getClasses :: Maybe BlockType -> Array H.ClassName
+getClasses (Just blockType) = [ fixedCellClass, getClassName blockType ]
+getClasses _ = [ emptyCellClass ]
 
 emptyCellClass :: H.ClassName
 emptyCellClass = H.className "cell"

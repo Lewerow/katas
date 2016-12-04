@@ -65,6 +65,13 @@ app = component { render, eval }
     modify stepDownModifier
     pure n
 
-stepDownModifier state =
-  let movedBlock = IL.head state.blocks in
-    state { blocks = movedBlock `IL.cons` IL.tail state.blocks }
+stepDownModifier state = let
+  fallingBlock = IL.head state.blocks
+  movedBlock = Block.moveDown fallingBlock in
+    if Board.fitsIn movedBlock state.gameBoard then
+      state { blocks = movedBlock `IL.cons` IL.tail state.blocks }
+    else
+      state {
+        blocks = IL.tail state.blocks
+        , gameBoard = Board.fix fallingBlock state.gameBoard
+      }

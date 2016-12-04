@@ -14,6 +14,9 @@ data Block = Block {
   position :: { x :: Int, y :: Int }
 }
 
+moveDown :: Block -> Block
+moveDown (Block block) = Block (block { position = (block.position { y = block.position.y + 1 } ) })
+
 getClasses :: Int -> Int -> Block -> Array ClassName
 getClasses x y block@(Block { blockType }) =
   if isCovered x y block then [ getClassName blockType, className "block" ]
@@ -32,7 +35,7 @@ getClassName t = case t of
 abs :: Int -> Int
 abs i = if i > 0 then i else -i
 
-getBlock :: Partial => Int -> BlockType
+getBlock :: Int -> BlockType
 getBlock i = case abs i of
  0 -> IBlock
  1 -> LBlock
@@ -40,23 +43,25 @@ getBlock i = case abs i of
  3 -> HBlock
  4 -> ZBlock
  5 -> SBlock
- 6 -> OBlock
+ _ -> OBlock
 
-getOrientation :: Partial => Int -> Orientation
+getOrientation :: Int -> Orientation
 getOrientation i = case abs i of
  0 -> N
  1 -> E
  2 -> S
- 3 -> W
+ _ -> W
 
 isCovered :: Int -> Int -> Block -> Boolean
-isCovered x0 y0 (Block { blockType, orientation, position }) =
-  let mask = map ( \{ x, y } -> { x: x + position.x, y: y + position.y } ) $
-   getMask blockType orientation in
-     isJust $ findIndex (\{ x, y } -> x == x0 && y == y0) mask
+isCovered x0 y0 block =
+  isJust $ findIndex (\{ x, y } -> x == x0 && y == y0) $ usedPositions block
 
+usedPositions :: Block -> Array { x ::Int, y :: Int }
+usedPositions (Block { blockType, orientation, position }) =
+  map ( \{ x, y } -> { x: x + position.x, y: y + position.y } ) $
+    getMask blockType orientation
 
-arbitraryBlock :: Partial => Int -> Block
+arbitraryBlock :: Int -> Block
 arbitraryBlock i = Block {
   blockType: getBlock $ i `mod` 7
   , orientation: getOrientation $ i `mod` 4

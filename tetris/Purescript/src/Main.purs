@@ -8,7 +8,8 @@ import Block as Block
 import Board as Board
 import Cell as Cell
 import Control.Monad.Eff.Random as Random
-import Data.List.Lazy as IL
+import Data.List.Infinite as IL
+import Data.List.Lazy (replicateM)
 import Matrix as Matrix
 import Control.Monad.Aff (Aff, later')
 import Control.Monad.Eff (Eff)
@@ -17,6 +18,7 @@ import GameStats (GameStats(..))
 import GameStats (initial) as GameStats
 import Halogen (HalogenEffects, action, runUI, query)
 import Halogen.Util (awaitBody, runHalogenAff)
+import Data.Maybe (Maybe (..))
 
 type InitialConstantState = {
   gameState :: GameState
@@ -28,8 +30,8 @@ type InitialConstantState = {
 initialState :: InitialConstantState
 initialState = { gameState: NotYetStarted
   , gameStats: GameStats.initial
-  , gameBoard: Board.Board { cells: Matrix.repeat 10 20 Cell.Free }
-  , hintBoard: Board.Board { cells: Matrix.repeat 5 5 Cell.Free }
+  , gameBoard: Board.Board { cells: Matrix.repeat 10 30 Nothing }
+  , hintBoard: Board.Board { cells: Matrix.repeat 5 5 Nothing }
 }
 
 setBlocks :: InitialConstantState -> IL.List (Block.Block) -> State
@@ -44,11 +46,9 @@ setBlocks state blocks = {
 gen :: { value :: Int, state :: Xorshift128 } -> { value :: Int, state :: Xorshift128 }
 gen { value, state } = generate state
 
-getAllBlocks :: Eff
-  (HalogenEffects(random :: Random.RANDOM))
-  (IL.List Int)
+getAllBlocks :: Eff (HalogenEffects(random :: Random.RANDOM)) (IL.List Int)
 getAllBlocks = do
-  seeds <- IL.replicateM 4 (Random.randomInt (-10000000) 100000000)
+  seeds <- replicateM 4 (Random.randomInt (-10000000) 100000000)
   pure $ IL.drop 1 $ map (\x -> x.value) $  IL.iterate gen { state: (initialize seeds), value: 0 }
 
 main :: Eff (HalogenEffects (random :: Random.RANDOM)) Unit
