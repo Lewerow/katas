@@ -1,12 +1,11 @@
 module Main where
 
-import App
+import App (Query (..), State, app)
 import Prelude
-import PRNG.Xorshift128
-import PRNG.PRNG
+import PRNG.Xorshift128 (Xorshift128)
+import PRNG.PRNG (generate, initialize)
 import Block as Block
 import Board as Board
-import Cell as Cell
 import Control.Monad.Eff.Random as Random
 import Data.List.Infinite as IL
 import Data.List.Lazy (replicateM)
@@ -14,15 +13,14 @@ import Matrix as Matrix
 import Control.Monad.Aff (Aff, later')
 import Control.Monad.Eff (Eff)
 import GameState (GameState(..))
-import GameStats (GameStats(..))
-import GameStats (initial) as GameStats
-import Halogen (HalogenEffects, action, runUI, query)
+import GameStats (GameStats, initial) as GameStats
+import Halogen (HalogenEffects, action, runUI)
 import Halogen.Util (awaitBody, runHalogenAff)
 import Data.Maybe (Maybe (..))
 
 type InitialConstantState = {
   gameState :: GameState
-  , gameStats :: GameStats
+  , gameStats :: GameStats.GameStats
   , gameBoard :: Board.Board
   , hintBoard :: Board.Board
 }
@@ -57,7 +55,7 @@ main = do
   runHalogenAff do
     body <- awaitBody
     app <- runUI app (setBlocks initialState $ map Block.arbitraryBlock blocks) body
-    setInterval 500 $ app (action Tick)
+    setInterval 100 $ app (action Tick)
 
 setInterval :: forall e a. Int -> Aff e a -> Aff e Unit
 setInterval ms f = later' ms $ do
