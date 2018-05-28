@@ -1,0 +1,5 @@
+_build/
+*.hi
+*.jsmod
+*.js
+*.o
