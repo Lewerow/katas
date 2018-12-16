@@ -1,0 +1,6 @@
+sensor-id;value
+s1;2
+s2;3
+s1;2
+s3;1
+s4;NaN
