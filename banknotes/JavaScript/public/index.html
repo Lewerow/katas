@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>The cash machine</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <link rel="stylesheet" href="https://cdn.metroui.org.ua/v4/css/metro-all.min.css">
+</head>
+<body>
+<div style="width:40%;left:30%;top:100px;text-align:center;">
+<label for="amount">Amount to withdraw:</label> <input id="amount" data-role="input" type="number" value="" name="amount" />
+
+<button id="withdraw" type="button" class="primary button">Withdraw</button>
+
+<div id="output" style="text-align: left;">
+    <ul id="items">
+
+    </ul>
+</div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+<script src="https://cdn.metroui.org.ua/v4/js/metro.min.js"></script>
+<script>
+    $("#withdraw").click(function() {
+        var a = document.getElementById("amount").value;
+        $.get(`withdraw?amount=${a}`, function(money) {
+            var items = "<ul id='items'>";
+            for(m of Object.keys(money)) {
+                // XSS safety net
+                var note = Number.parseInt(m);
+                var amount = Number.parseInt(money[m]);
+                items += `<li>$${note} - ${amount} times</li>`
+            }
+            items += "</ul>";
+
+            $("#items").html(items);
+        }).fail(function() {
+            console.error("Failure");
+            Metro.notify.create("Cannot deliver this amount of money", "Failed", {});
+        });
+    });
+</script>
+
+</body>
+</html>
