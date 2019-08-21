@@ -2,7 +2,7 @@
   "name": "banknotes",
   "version": "1.0.0",
   "description": "An interview exercise",
-  "main": "machine.js",
+  "main": "index.js",
   "scripts": {
     "test": "node tests.js && echo OK"
   },
