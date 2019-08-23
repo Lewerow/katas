@@ -24,4 +24,4 @@ node index.js --run-server --fast
 ```
 
 For running calls via HTTP server you need to have a working network connection,
-as some libraries (MetroUI and jQuery) are fetched from CDNs.
+as some libraries (MetroUI and jQuery) are fetched from CDNs. Server will be started on port 8080
